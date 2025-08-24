@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Production Schedule - Vegan Meal Delivery</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#667eea">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+            backdrop-filter: blur(10px);
+            overflow: hidden;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" patternUnits="userSpaceOnUse" width="100" height="100"><circle cx="25" cy="25" r="1" fill="rgba(255,255,255,0.1)"/><circle cx="75" cy="75" r="1.5" fill="rgba(255,255,255,0.05)"/><circle cx="50" cy="10" r="0.8" fill="rgba(255,255,255,0.08)"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+            opacity: 0.3;
+        }
+        
+        .header h1 {
+            font-size: 2.5em;
+            font-weight: 300;
+            margin-bottom: 10px;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .header p {
+            font-size: 1.2em;
+            opacity: 0.9;
+            position: relative;
+            z-index: 1;
+        }
+        
+        .schedule-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+            padding: 40px;
+        }
+        
+        .day-card {
+            background: white;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            transition: all 0.3s ease;
+            border: 2px solid transparent;
+        }
+        
+        .day-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+            border-color: #667eea;
+        }
+        
+        .day-header {
+            padding: 20px;
+            font-weight: bold;
+            font-size: 1.3em;
+            text-align: center;
+            color: white;
+        }
+        
+        .sunday { background: linear-gradient(135deg, #ff6b6b, #ff8e8e); }
+        .monday { background: linear-gradient(135deg, #4ecdc4, #6bcf7f); }
+        .tuesday { background: linear-gradient(135deg, #45b7d1, #96c93d); }
+        
+        .day-content {
+            padding: 25px;
+        }
+        
+        .time-block {
+            background: #f8f9fa;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-left: 5px solid #667eea;
+        }
+        
+        .time-header {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 15px;
+            font-size: 1.1em;
+        }
+        
+        .task-list {
+            list-style: none;
+        }
+        
+        .task-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            margin: 8px 0;
+            background: white;
+            border-radius: 8px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.2s ease;
+        }
+        
+        .task-item:hover {
+            background: #f0f8ff;
+            border-color: #667eea;
+            transform: translateX(5px);
+        }
+        
+        .task-name {
+            flex: 1;
+            color: #2c3e50;
+            font-weight: 500;
+        }
+        
+        .task-duration {
+            background: #667eea;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            min-width: 60px;
+            text-align: center;
+        }
+        
+        .summary {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            margin: 30px;
+            padding: 30px;
+            border-radius: 15px;
+            color: white;
+            text-align: center;
+        }
+        
+        .summary h2 {
+            margin-bottom: 15px;
+            font-size: 1.5em;
+        }
+        
+        .summary-stats {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .stat-item {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .stat-number {
+            font-size: 2em;
+            font-weight: bold;
+            display: block;
+        }
+        
+        .checkbox {
+            width: 20px;
+            height: 20px;
+            border: 2px solid #667eea;
+            border-radius: 4px;
+            margin-right: 10px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .checkbox:hover {
+            background: #667eea;
+            transform: scale(1.1);
+        }
+        
+        .menu-preview {
+            background: white;
+            margin: 30px;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+        }
+        
+        .menu-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .menu-item {
+            background: linear-gradient(135deg, #fff, #f8f9fa);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid #e0e0e0;
+            transition: all 0.3s ease;
+        }
+        
+        .menu-item:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.1);
+        }
+        
+        .menu-title {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+        
+        .menu-description {
+            color: #666;
+            font-size: 0.9em;
+            line-height: 1.4;
+        }
+        
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea, #764ba2);
+            border-radius: 10px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+
+        .menu-controls {
+            display: flex;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .count-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            width: 28px;
+            height: 28px;
+            font-size: 1.2em;
+            cursor: pointer;
+            margin: 0 5px;
+            transition: background 0.2s;
+        }
+        .count-btn:hover {
+            background: #764ba2;
+        }
+        .count-input {
+            width: 50px;
+            text-align: center;
+            font-size: 1em;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 3px 0;
+            margin: 0 5px;
+        }
+    </style>
+</head>
+<body>
+    <button id="installBtn" style="display:none;position:fixed;top:20px;right:20px;z-index:1000;padding:12px 24px;background:#667eea;color:white;border:none;border-radius:8px;font-size:1em;box-shadow:0 2px 8px rgba(0,0,0,0.1);cursor:pointer;">Install App</button>
+    <div class="container">
+        <div class="header">
+            <h1>🌱 Vegan Meal Delivery Production Schedule</h1>
+            <p>August 25-27, 2025 • Delivery: Wednesday Morning</p>
+        </div>
+
+        <div class="menu-preview">
+            <h2 style="color: #2c3e50; margin-bottom: 20px; text-align: center;">🍽️ Weekly Menu Highlights</h2>
+            <div class="menu-grid">
+                <!-- Main Entrees -->
+                <div class="menu-item">
+                    <div class="menu-title">Hearty Mushroom Stroganoff Tagliatelle</div>
+                    <div class="menu-description">Plant-based tagliatelle with mushrooms in savory stroganoff sauce</div>
+                    <div class="menu-controls">
+                        <button class="count-btn" onclick="changeCount(this, -1)">-</button>
+                        <input type="number" class="count-input" value="0" min="0" onchange="inputCountChange(this)">
+                        <button class="count-btn" onclick="changeCount(this, 1)">+</button>
+                    </div>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-title">Sweet Potato Burrito</div>
+                    <div class="menu-description">Chipotle black beans, roasted sweet potatoes & avocado</div>
+                    <div class="menu-controls">
+                        <button class="count-btn" onclick="changeCount(this, -1)">-</button>
+                        <input type="number" class="count-input" value="0" min="0" onchange="inputCountChange(this)">
+                        <button class="count-btn" onclick="changeCount(this, 1)">+</button>
+                    </div>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-title">Butternut Squash Steaks</div>
+                    <div class="menu-description">Thick-cut squash with mushrooms & miso gravy</div>
+                    <div class="menu-controls">
+                        <button class="count-btn" onclick="changeCount(this, -1)">-</button>
+                        <input type="number" class="count-input" value="0" min="0" onchange="inputCountChange(this)">
+                        <button class="count-btn" onclick="changeCount(this, 1)">+</button>
+                    </div>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-title">Wok-Tossed Tofu</div>
+                    <div class="menu-description">Black bean garlic sauce with cashews & bell peppers</div>
+                    <div class="menu-controls">
+                        <button class="count-btn" onclick="changeCount(this, -1)">-</button>
+                        <input type="number" class="count-input" value="0" min="0" onchange="inputCountChange(this)">
+                        <button class="count-btn" onclick="changeCount(this, 1)">+</button>
+                    </div>
+                </div>
+                <!-- Soups -->
+                <div class="menu-item">
+                    <div class="menu-title">Hearty Minestrone Soup</div>
+                    <div class="menu-description">olive oil, onion, garlic, carrots, celery, zucchini, green beans, diced tomatoes, tomato paste, vegetable broth, kidney beans, cannellini beans, pasta, spinach</div>
+                    <div class="menu-controls">
+                        <button class="count-btn" onclick="changeCount(this, -1)">-</button>
+                        <input type="number" class="count-input" value="0" min="0" onchange="inputCountChange(this)">
+                        <button class="count-btn" onclick="changeCount(this, 1)">+</button>
+                    </div>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-title">Miso Soup</div>
+                    <div class="menu-description">Vegetable broth, miso paste, ginger, garlic, green onions, mushrooms, zucchini, cabbage, soy sauce, sesame oil</div>
+                    <div class="menu-controls">
+                        <button class="count-btn" onclick="changeCount(this, -1)">-</button>
+                        <input type="number" class="count-input" value="0" min="0" onchange="inputCountChange(this)">
+                        <button class="count-btn" onclick="changeCount(this, 1)">+</button>
+                    </div>
+                </div>
+                <!-- Sides -->
+                <div class="menu-item">
+                    <div class="menu-title">Miso Eggplant Strips</div>
+                    <div class="menu-controls">
+                        <button class="count-btn" onclick="changeCount(this, -1)">-</button>
+                        <input type="number" class="count-input" value="0" min="0" onchange="inputCountChange(this)">
+                        <button class="count-btn" onclick="changeCount(this, 1)">+</button>
+                    </div>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-title">Elote Style Streetcar Cob</div>
+                    <div class="menu-controls">
+                        <button class="count-btn" onclick="changeCount(this, -1)">-</button>
+                        <input type="number" class="count-input" value="0" min="0" onchange="inputCountChange(this)">
+                        <button class="count-btn" onclick="changeCount(this, 1)">+</button>
+                    </div>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-title">Maple Glazed Baby Corn</div>
+                    <div class="menu-controls">
+                        <button class="count-btn" onclick="changeCount(this, -1)">-</button>
+                        <input type="number" class="count-input" value="0" min="0" onchange="inputCountChange(this)">
+                        <button class="count-btn" onclick="changeCount(this, 1)">+</button>
+                    </div>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-title">Stamen Sugar Snap Peas with Lime Zest</div>
+                    <div class="menu-controls">
+                        <button class="count-btn" onclick="changeCount(this, -1)">-</button>
+                        <input type="number" class="count-input" value="0" min="0" onchange="inputCountChange(this)">
+                        <button class="count-btn" onclick="changeCount(this, 1)">+</button>
+                    </div>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-title">Orange and Basil Tofu</div>
+                    <div class="menu-controls">
+                        <button class="count-btn" onclick="changeCount(this, -1)">-</button>
+                        <input type="number" class="count-input" value="0" min="0" onchange="inputCountChange(this)">
+                        <button class="count-btn" onclick="changeCount(this, 1)">+</button>
+                    </div>
+                </div>
+                <!-- Desserts -->
+                <div class="menu-item">
+                    <div class="menu-title">Apple Pie</div>
+                    <div class="menu-controls">
+                        <button class="count-btn" onclick="changeCount(this, -1)">-</button>
+                        <input type="number" class="count-input" value="0" min="0" onchange="inputCountChange(this)">
+                        <button class="count-btn" onclick="changeCount(this, 1)">+</button>
+                    </div>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-title">Raspberry Cheesecake (in plastic cups, can be made and frozen)</div>
+                    <div class="menu-controls">
+                        <button class="count-btn" onclick="changeCount(this, -1)">-</button>
+                        <input type="number" class="count-input" value="0" min="0" onchange="inputCountChange(this)">
+                        <button class="count-btn" onclick="changeCount(this, 1)">+</button>
+                    </div>
+                </div>
+                <div class="menu-item">
+                    <div class="menu-title">Muffins</div>
+                    <div class="menu-controls">
+                        <button class="count-btn" onclick="changeCount(this, -1)">-</button>
+                        <input type="number" class="count-input" value="0" min="0" onchange="inputCountChange(this)">
+                        <button class="count-btn" onclick="changeCount(this, 1)">+</button>
+                    </div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; color: #444; font-size: 1em; text-align: center;">
+                <strong>Note:</strong> Each entree comes with a smaller portion of a side. Sides can also be ordered separately.
+            </div>
+        </div>
+
+        <div class="schedule-grid">
+            <div class="day-card">
+                <div class="day-header sunday">
+                    🌅 SUNDAY PREP DAY
+                </div>
+                <div class="day-content">
+                    <div class="time-block">
+                        <div class="time-header">6:00 AM - 2:00 PM (8 hours)</div>
+                        <ul class="task-list">
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Make vegetable broth</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Make hearty minestrone</span>
+                                <span class="task-duration">1h</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Creamy jalapeño ranch for burrito</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Corn salsa (canned whole poblano)</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Make salsa verde</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Roast sweet potatoes for burrito</span>
+                                <span class="task-duration">1h</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Roast butternut steaks</span>
+                                <span class="task-duration">1h</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Make black bean garlic sauce</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Slice, salt & store eggplant</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Make cheesecake</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Make pie crust for apple pie</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="day-card">
+                <div class="day-header monday">
+                    🔥 MONDAY PRODUCTION
+                </div>
+                <div class="day-content">
+                    <div class="time-block">
+                        <div class="time-header">6:00 AM - 2:00 PM (longer if needed)</div>
+                        <ul class="task-list">
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Pack minestrone</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Make miso soup</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Make maple glazed carrots</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Pack butternut squash steaks w/carrot side</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Pack carrot sides</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Make elote corn side</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Pack elote corn side</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Make eggplant side</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Pack eggplant side</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Make apple pie filling/crumble</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Bake & pack apple pie</span>
+                                <span class="task-duration">1h</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Bake & pack muffins</span>
+                                <span class="task-duration">1h</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Prep bell peppers for wok tofu</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="day-card">
+                <div class="day-header tuesday">
+                    🚚 TUESDAY FINAL PREP
+                </div>
+                <div class="day-content">
+                    <div class="time-block">
+                        <div class="time-header">6:00 AM - 2:00 PM (or until delivery ready)</div>
+                        <ul class="task-list">
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Make wok tofu</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Pack wok tofu</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Pack miso soup (add tofu)</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Make tofu puffs w/orange & basil glaze</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Make sugar snap peas</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Pack sugar snap peas sides</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Make tagliatelle pasta</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Pack tagliatelle pasta</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Assemble burritos</span>
+                                <span class="task-duration">2h</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Pack burritos</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Make cilantro rice</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Pack cilantro rice</span>
+                                <span class="task-duration">30m</span>
+                            </li>
+                            <li class="task-item">
+                                <div class="checkbox" onclick="toggleTask(this)"></div>
+                                <span class="task-name">Salad & juice prep</span>
+                                <span class="task-duration">2h</span>
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="summary">
+            <h2>📊 Production Summary</h2>
+            <p>Total estimated prep time across 3 days</p>
+            <div class="summary-stats">
+                <div class="stat-item">
+                    <span class="stat-number">22</span>
+                    <span>Total Hours</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">37</span>
+                    <span>Individual Tasks</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">4</span>
+                    <span>Main Dishes</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">5</span>
+                    <span>Side Dishes</span>
+                </div>
+                <div class="stat-item">
+                    <span class="stat-number">2</span>
+                    <span>Soups</span>
+                </div>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" id="overallProgress"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function toggleTask(checkbox) {
+            const isCompleted = checkbox.style.backgroundColor === 'rgb(102, 126, 234)';
+            
+            if (isCompleted) {
+                checkbox.style.backgroundColor = '';
+                checkbox.innerHTML = '';
+            } else {
+                checkbox.style.backgroundColor = '#667eea';
+                checkbox.innerHTML = '✓';
+                checkbox.style.color = 'white';
+                checkbox.style.display = 'flex';
+                checkbox.style.alignItems = 'center';
+                checkbox.style.justifyContent = 'center';
+                checkbox.style.fontSize = '14px';
+            }
+            
+            updateProgress();
+        }
+        
+        function updateProgress() {
+            const checkboxes = document.querySelectorAll('.checkbox');
+            const completed = Array.from(checkboxes).filter(cb => 
+                cb.style.backgroundColor === 'rgb(102, 126, 234)'
+            ).length;
+            
+            const percentage = (completed / checkboxes.length) * 100;
+            document.getElementById('overallProgress').style.width = percentage + '%';
+        }
+
+        function changeCount(btn, delta) {
+            const input = btn.parentElement.querySelector('.count-input');
+            let value = parseInt(input.value) || 0;
+            value += delta;
+            if (value < 0) value = 0;
+            input.value = value;
+        }
+        function inputCountChange(input) {
+            let value = parseInt(input.value) || 0;
+            if (value < 0) value = 0;
+            input.value = value;
+        }
+        
+        // Add some animations on page load
+        window.addEventListener('load', function() {
+            const cards = document.querySelectorAll('.day-card');
+            cards.forEach((card, index) => {
+                setTimeout(() => {
+                    card.style.opacity = '0';
+                    card.style.transform = 'translateY(20px)';
+                    card.style.transition = 'all 0.6s ease';
+                    
+                    setTimeout(() => {
+                        card.style.opacity = '1';
+                        card.style.transform = 'translateY(0)';
+                    }, 100);
+                }, index * 200);
+            });
+        });
+    </script>
+    <script>
+    let deferredPrompt;
+    const installBtn = document.getElementById('installBtn');
+    window.addEventListener('beforeinstallprompt', (e) => {
+      e.preventDefault();
+      deferredPrompt = e;
+      installBtn.style.display = 'block';
+      installBtn.onclick = () => {
+        installBtn.style.display = 'none';
+        deferredPrompt.prompt();
+        deferredPrompt.userChoice.then(() => {
+          deferredPrompt = null;
+        });
+      };
+    });
+    </script>
+</body>
+</html>

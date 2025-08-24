@@ -1,0 +1,16 @@
+{
+  "name": "Vegan Meal Production App",
+  "short_name": "MealApp",
+  "start_url": ".",
+  "display": "standalone",
+  "background_color": "#667eea",
+  "theme_color": "#667eea",
+  "description": "Production schedule and menu for vegan meal delivery.",
+  "icons": [
+    {
+        "src": "android-chrome-192x192.png",
+        "sizes": "192x192",
+        "type": "image/png"
+    }
+  ]
+}
